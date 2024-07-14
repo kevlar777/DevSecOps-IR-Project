@@ -1,0 +1,83 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.9.3
+        options: --env discovery.type=single-node
+        ports:
+          - 9200:9200
+
+      logstash:
+        image: docker.elastic.co/logstash/logstash:7.9.3
+        options: --volume ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+        ports:
+          - 5000:5000
+
+      kibana:
+        image: docker.elastic.co/kibana/kibana:7.9.3
+        ports:
+          - 5601:5601
+
+      prometheus:
+        image: prom/prometheus
+        options: --volume ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+        ports:
+          - 9090:9090
+
+      grafana:
+        image: grafana/grafana
+        options: --env GF_SECURITY_ADMIN_PASSWORD=admin
+        ports:
+          - 3000:3000
+
+      flask_app:
+        image: user/repo:latest
+        ports:
+          - 5000:5000
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: user/repo:latest
+
+    - name: Scan Docker image for vulnerabilities
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: user/repo:latest
+
+    - name: Run a one-line script
+      run: echo Hello, world!
+
+    - name: Run a multi-line script
+      run: |
+        echo Add other actions to build,
+        echo test, and deploy your project.
+
+  isolate_container:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Stop compromised container
+      run: docker stop your_container_name
