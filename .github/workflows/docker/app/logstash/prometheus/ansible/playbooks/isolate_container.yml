@@ -1,0 +1,7 @@
+- name: Isolate compromised container
+  hosts: localhost
+  tasks:
+    - name: Stop compromised container
+      docker_container:
+        name: "{{ container_name }}"
+        state: stopped
