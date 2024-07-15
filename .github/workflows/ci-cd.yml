@@ -20,7 +20,7 @@ jobs:
 
       logstash:
         image: docker.elastic.co/logstash/logstash:7.9.3
-        options: --volume ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+        options: --volume ${{ github.workspace }}/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
         ports:
           - 5000:5000
 
@@ -31,7 +31,7 @@ jobs:
 
       prometheus:
         image: prom/prometheus
-        options: --volume ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+        options: --volume ${{ github.workspace }}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
         ports:
           - 9090:9090
 
